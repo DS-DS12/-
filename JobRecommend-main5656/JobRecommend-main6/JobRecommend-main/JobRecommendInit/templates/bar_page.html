@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}数据可视化分析 - 系统平台{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    <!-- 侧边栏 -->
+    <aside class="hidden md:flex flex-col w-64 bg-white shadow-lg z-10">
+        <div class="p-5 border-b">
+            <h1 class="text-xl font-bold text-gradient">系统平台</h1>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+
+
+            <a href="{% url 'job_list' %}"
+               class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-search w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>职位搜索</span>
+            </a>
+
+            <a href="{% url 'bar_page' %}"
+               class="flex items-center px-4 py-3 text-primary bg-primary/10 rounded-lg group">
+                <i class="fa fa-bar-chart w-5 h-5 mr-3"></i>
+                <span>可视化分析</span>
+            </a>
+
+            <a href="{% url 'get_recommend' %}"
+               class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-briefcase w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>职位推荐</span>
+            </a>
+            <a href="{% url 'pass_page' %}"
+               class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-cog w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>个人设置</span>
+            </a>
+
+        </nav>
+
+        <div class="p-4 border-t">
+            <div class="flex items-center">
+                <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-800">{{ request.session.user_name }}</p>
+                    <p class="text-xs text-gray-500">普通用户</p>
+                </div>
+                <a href="{% url 'logout' %}" class="ml-auto text-gray-500 hover:text-danger transition-colors">
+                    <i class="fa fa-sign-out"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- 顶部导航栏 -->
+        <header class="bg-white shadow-sm z-10">
+            <div class="flex items-center justify-between p-4">
+                <button class="md:hidden text-gray-500 focus:outline-none" id="menuToggle">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+
+                <div class="relative max-w-md w-full mx-4">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" placeholder="搜索职位、公司..." id="globalSearch"
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button class="relative text-gray-500 hover:text-primary transition-colors">
+                        <i class="fa fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-danger"></span>
+                    </button>
+                    <div class="hidden md:block h-8 w-px bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+            <div class="mb-6">
+                <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">招聘数据可视化分析</h1>
+                <p class="text-neutral">全面分析招聘市场数据，助您了解行业趋势</p>
+            </div>
+
+            <!-- 数据概览 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <p class="text-neutral text-sm">总职位数量</p>
+                    <h3 class="text-2xl font-bold mt-1" id="totalJobs">0</h3>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <p class="text-neutral text-sm">平均薪资(k/月)</p>
+                    <h3 class="text-2xl font-bold mt-1" id="avgSalary">0</h3>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <p class="text-neutral text-sm">覆盖城市数量</p>
+                    <h3 class="text-2xl font-bold mt-1" id="cityCount">0</h3>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <p class="text-neutral text-sm">热门职位类型</p>
+                    <h3 class="text-2xl font-bold mt-1" id="hotJobType">--</h3>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-xl font-semibold mb-4">学历要求分布</h2>
+                    <div class="h-80">
+                        <canvas id="eduChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-xl font-semibold mb-4">薪资范围分布</h2>
+                    <div class="h-80">
+                        <canvas id="salaryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-xl font-semibold mb-4">工作经验要求</h2>
+                    <div class="h-80">
+                        <canvas id="expChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h2 class="text-xl font-semibold mb-4">热门城市职位分布</h2>
+                    <div class="h-80">
+                        <canvas id="cityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 移动端侧边栏切换
+    const menuToggle = document.getElementById('menuToggle');
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            const sidebar = document.querySelector('aside');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('fixed');
+            sidebar.classList.toggle('inset-0');
+            sidebar.classList.toggle('z-50');
+        });
+    }
+
+    // 全局搜索框回车事件
+    document.getElementById('globalSearch').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && this.value) {
+            window.location.href = `{% url 'job_list' %}?keyword=${this.value}`;
+        }
+    });
+
+    // 获取图表数据并渲染
+    fetch('/get_chart_data/')
+        .then(res => res.json())
+        .then(data => {
+            // 计算总职位数量
+            const totalJobs = data.edu_data.reduce((sum, item) => sum + item.value, 0);
+            document.getElementById('totalJobs').textContent = totalJobs;
+
+            // 计算平均薪资
+            let salarySum = 0;
+            let salaryCount = 0;
+            data.salary_data.forEach(item => {
+                const avgSalaryInRange = getAverageSalary(item.name);
+                salarySum += avgSalaryInRange * item.value;
+                salaryCount += item.value;
+            });
+            const avgSalary = salaryCount > 0 ? (salarySum / salaryCount).toFixed(1) : 0;
+            document.getElementById('avgSalary').textContent = avgSalary;
+
+            // 城市数量
+            document.getElementById('cityCount').textContent = data.city_data.filter(item => item.value > 0).length;
+
+            // 热门职位类型
+            document.getElementById('hotJobType').textContent = "技术开发"; // 这里可以根据实际数据计算
+
+            // 渲染学历分布图表
+            const eduCtx = document.getElementById('eduChart').getContext('2d');
+            new Chart(eduCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.edu_data.map(item => item.name),
+                    datasets: [{
+                        data: data.edu_data.map(item => item.value),
+                        backgroundColor: [
+                            '#165DFF', '#36CFC9', '#722ED1', '#FAAD14', '#F5222D'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // 渲染薪资分布图表
+            const salaryCtx = document.getElementById('salaryChart').getContext('2d');
+            new Chart(salaryCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.salary_data.map(item => item.name),
+                    datasets: [{
+                        label: '职位数量',
+                        data: data.salary_data.map(item => item.value),
+                        backgroundColor: '#165DFF',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 渲染工作经验图表
+            const expCtx = document.getElementById('expChart').getContext('2d');
+            new Chart(expCtx, {
+                type: 'pie',
+                data: {
+                    labels: data.exp_data.map(item => item.name),
+                    datasets: [{
+                        data: data.exp_data.map(item => item.value),
+                        backgroundColor: [
+                            '#00B42A', '#165DFF', '#722ED1', '#FAAD14', '#F5222D'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+
+            // 渲染城市分布图表
+            const cityCtx = document.getElementById('cityChart').getContext('2d');
+            new Chart(cityCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.city_data.map(item => item.name),
+                    datasets: [{
+                        label: '职位数量',
+                        data: data.city_data.map(item => item.value),
+                        backgroundColor: '#36CFC9',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+    // 辅助函数：计算薪资区间的平均值
+    function getAverageSalary(rangeText) {
+        if (rangeText === '5K及以下') return 2.5;
+        if (rangeText === '5-10K') return 7.5;
+        if (rangeText === '10K-15K') return 12.5;
+        if (rangeText === '15K-20K') return 17.5;
+        if (rangeText === '20K-30K') return 25;
+        if (rangeText === '30K-50K') return 40;
+        if (rangeText === '50K以上') return 60;
+        return 0;
+    }
+});
+</script>
+{% endblock %}

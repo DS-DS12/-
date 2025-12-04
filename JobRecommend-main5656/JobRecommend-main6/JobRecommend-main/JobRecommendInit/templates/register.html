@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - 系统平台{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50">
+    <div class="max-w-md w-full mx-auto p-6 bg-white rounded-xl card-shadow overflow-hidden">
+        <div class="text-center mb-8">
+            <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gradient">创建账号</h2>
+            <p class="text-neutral mt-2">注册后即可使用系统全部功能</p>
+        </div>
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+            <div class="error-message text-danger text-sm mb-2 hidden"></div>
+
+            <div>
+                <label for="user" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-user text-neutral"></i>
+                    </div>
+                    <input type="text" id="user" name="user" required
+                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           placeholder="请设置用户名">
+                </div>
+            </div>
+
+            <div>
+                <label for="user_name" class="block text-sm font-medium text-gray-700 mb-1">昵称</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-id-card text-neutral"></i>
+                    </div>
+                    <input type="text" id="user_name" name="user_name" required
+                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           placeholder="请输入昵称">
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-lock text-neutral"></i>
+                    </div>
+                    <input type="password" id="password" name="password" required
+                           class="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           placeholder="请设置密码">
+                    <button type="button" class="toggle-password absolute inset-y-0 right-0 pr-3 flex items-center text-neutral hover:text-primary transition-colors">
+                        <i class="fa fa-eye-slash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="terms" name="terms" type="checkbox" required
+                           class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="terms" class="text-gray-600">我同意<a href="#" class="text-primary hover:text-primary/80">服务条款</a>和<a href="#" class="text-primary hover:text-primary/80">隐私政策</a></label>
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="w-full py-2.5 px-4 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg">
+                注册
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+                已有账号? <a href="{% url 'login' %}" class="font-medium text-primary hover:text-primary/80 transition-colors">立即登录</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const errorEl = document.querySelector('.error-message');
+
+    fetch("{% url 'register' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        errorEl.classList.remove('hidden');
+
+        if (data.code === 0) {
+            window.location.href = "{% url 'index' %}";
+        } else {
+            errorEl.textContent = data.msg;
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '注册';
+        }
+    }).catch(err => {
+        errorEl.textContent = '网络错误，请重试';
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '注册';
+    });
+});
+</script>
+{% endblock %}

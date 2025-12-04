@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}爬虫管理 - 系统平台{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    <!-- 侧边栏 -->
+    <aside class="hidden md:flex flex-col w-64 bg-white shadow-lg z-10">
+        <div class="p-5 border-b">
+            <h1 class="text-xl font-bold text-gradient">系统平台</h1>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <a href="{% url 'index' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-home w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>首页</span>
+            </a>
+            <a href="{% url 'job_list' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-search w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>数据搜索</span>
+            </a>
+            <a href="{% url 'bar_page' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-bar-chart w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>可视化分析</span>
+            </a>
+            <a href="{% url 'get_recommend' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-briefcase w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>职位推荐</span>
+            </a>
+            <a href="{% url 'spiders' %}" class="flex items-center px-4 py-3 text-primary bg-primary/10 rounded-lg group">
+                <i class="fa fa-spider w-5 h-5 mr-3"></i>
+                <span>爬虫管理</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t">
+            <div class="flex items-center">
+                <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-800">{{ request.session.user_name }}</p>
+                    <p class="text-xs text-gray-500">普通用户</p>
+                </div>
+                <a href="{% url 'logout' %}" class="ml-auto text-gray-500 hover:text-danger transition-colors">
+                    <i class="fa fa-sign-out"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- 顶部导航栏 -->
+        <header class="bg-white shadow-sm z-10">
+            <div class="flex items-center justify-between p-4">
+                <button class="md:hidden text-gray-500 focus:outline-none" id="menuToggle">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+
+                <div class="relative max-w-md w-full mx-4">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" placeholder="搜索职位、公司..." id="globalSearch"
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button class="relative text-gray-500 hover:text-primary transition-colors">
+                        <i class="fa fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-danger"></span>
+                    </button>
+                    <div class="hidden md:block h-8 w-px bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+            <div class="mb-6">
+                <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">爬虫管理</h1>
+                <p class="text-neutral">配置并运行爬虫以获取最新职位数据</p>
+            </div>
+
+            <!-- 爬虫状态卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <p class="text-neutral text-sm">爬虫状态</p>
+                    <h3 class="text-2xl font-bold mt-1">
+                        {% if spider_code_1 == 0 %}
+                            <span class="text-success"><i class="fa fa-check-circle mr-2"></i>空闲中</span>
+                        {% else %}
+                            <span class="text-warning"><i class="fa fa-spinner fa-spin mr-2"></i>运行中</span>
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <p class="text-neutral text-sm">总爬取次数</p>
+                    <h3 class="text-2xl font-bold mt-1">{{ spider_model.count|default:0 }}</h3>
+                </div>
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <p class="text-neutral text-sm">总爬取页数</p>
+                    <h3 class="text-2xl font-bold mt-1">{{ spider_model.page|default:0 }}</h3>
+                </div>
+            </div>
+
+            <!-- 爬虫配置表单 -->
+            <div class="bg-white rounded-xl p-6 card-shadow mb-8">
+                <h2 class="text-xl font-semibold mb-6">爬虫配置</h2>
+                <form id="spiderForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">关键词</label>
+                            <input type="text" name="key_word" placeholder="例如：Python 开发"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                   required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">城市</label>
+                            <select name="city" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" required>
+                                <option value="全国">全国</option>
+                                <option value="北京">北京</option>
+                                <option value="上海">上海</option>
+                                <option value="广州">广州</option>
+                                <option value="深圳">深圳</option>
+                                <option value="杭州">杭州</option>
+                                <option value="南京">南京</option>
+                                <option value="成都">成都</option>
+                                <option value="武汉">武汉</option>
+                                <option value="西安">西安</option>
+                                <option value="广西">广西</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">爬取页数</label>
+                            <input type="number" name="page" min="1" max="50" value="5"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">目标网站</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="role" value="猎聘网" checked
+                                       class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300 rounded">
+                                <span class="ml-2">猎聘网</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" id="startSpiderBtn" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center"
+                                {% if spider_code_1 == 1 %}disabled{% endif %}>
+                            <i class="fa fa-play mr-2"></i>开始爬取
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 爬取日志 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h2 class="text-xl font-semibold mb-4">爬取日志</h2>
+                <div class="bg-gray-50 rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm" id="spiderLog">
+                    <p class="text-neutral">等待爬取任务开始...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 移动端菜单切换
+    document.getElementById('menuToggle').addEventListener('click', function() {
+        const sidebar = document.querySelector('aside');
+        sidebar.classList.toggle('hidden');
+        sidebar.classList.toggle('fixed');
+        sidebar.classList.toggle('inset-y-0');
+        sidebar.classList.toggle('left-0');
+    });
+
+    // 全局搜索功能
+    document.getElementById('globalSearch').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && this.value.trim()) {
+            window.location.href = `{% url 'job_list' %}?keyword=${encodeURIComponent(this.value.trim())}`;
+        }
+    });
+
+    // 爬虫表单提交
+    const spiderForm = document.getElementById('spiderForm');
+    const startBtn = document.getElementById('startSpiderBtn');
+    const logContainer = document.getElementById('spiderLog');
+
+    spiderForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // 禁用按钮并显示加载状态
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>爬取中...';
+
+        // 添加开始日志
+        logContainer.innerHTML += `<p class="text-primary">${new Date().toLocaleTimeString()} - 开始爬取数据...</p>`;
+        logContainer.scrollTop = logContainer.scrollHeight;
+
+        // 收集表单数据
+        const formData = new FormData(this);
+
+        // 发送请求
+        fetch('{% url "start_spider" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.code === 0) {
+                logContainer.innerHTML += `<p class="text-success">${new Date().toLocaleTimeString()} - ${data.msg}</p>`;
+                // 刷新页面更新统计数据
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                logContainer.innerHTML += `<p class="text-danger">${new Date().toLocaleTimeString()} - 错误: ${data.msg}</p>`;
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<i class="fa fa-play mr-2"></i>开始爬取';
+            }
+            logContainer.scrollTop = logContainer.scrollHeight;
+        })
+        .catch(error => {
+            logContainer.innerHTML += `<p class="text-danger">${new Date().toLocaleTimeString()} - 网络错误: ${error.message}</p>`;
+            startBtn.disabled = false;
+            startBtn.innerHTML = '<i class="fa fa-play mr-2"></i>开始爬取';
+            logContainer.scrollTop = logContainer.scrollHeight;
+        });
+    });
+
+    // 获取CSRF Token辅助函数
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // 如果爬虫正在运行，定期更新状态
+    {% if spider_code_1 == 1 %}
+        const statusCheckInterval = setInterval(() => {
+            fetch('{% url "spiders" %}')
+                .then(response => response.text())
+                .then(html => {
+                    // 检查是否仍在运行
+                    if (!html.includes('运行中')) {
+                        clearInterval(statusCheckInterval);
+                        window.location.reload();
+                    }
+                });
+        }, 3000);
+    {% endif %}
+});
+</script>
+{% endblock %}

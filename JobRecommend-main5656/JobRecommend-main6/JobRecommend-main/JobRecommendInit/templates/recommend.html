@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}职位推荐 - 系统平台{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    <!-- 侧边栏（复用dashboard的侧边栏结构） -->
+    <aside class="hidden md:flex flex-col w-64 bg-white shadow-lg z-10">
+        <div class="p-5 border-b">
+            <h1 class="text-xl font-bold text-gradient">系统平台</h1>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+
+            <a href="{% url 'job_list' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-search w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>职位搜索</span>
+            </a>
+            <a href="{% url 'bar_page' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-bar-chart w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>可视化分析</span>
+            </a>
+            <a href="{% url 'get_recommend' %}" class="flex items-center px-4 py-3 text-primary bg-primary/10 rounded-lg group">
+                <i class="fa fa-briefcase w-5 h-5 mr-3"></i>
+                <span>职位推荐</span>
+            </a>
+            <a href="{% url 'pass_page' %}"
+               class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-cog w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>个人设置</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t">
+            <div class="flex items-center">
+                <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-800">{{ request.session.user_name }}</p>
+                    <p class="text-xs text-gray-500">普通用户</p>
+                </div>
+                <a href="{% url 'logout' %}" class="ml-auto text-gray-500 hover:text-danger transition-colors">
+                    <i class="fa fa-sign-out"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- 顶部导航栏（复用dashboard） -->
+        <header class="bg-white shadow-sm z-10">
+            <div class="flex items-center justify-between p-4">
+                <button class="md:hidden text-gray-500 focus:outline-none" id="menuToggle">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+
+                <div class="relative max-w-md w-full mx-4">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" placeholder="搜索推荐职位..." id="recommendSearch"
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button class="relative text-gray-500 hover:text-primary transition-colors">
+                        <i class="fa fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-danger"></span>
+                    </button>
+                    <div class="hidden md:block h-8 w-px bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 推荐职位内容区 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+            <div class="mb-6">
+                <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">为您推荐的职位</h1>
+                <p class="text-neutral">基于您的投递历史和求职意向生成</p>
+            </div>
+
+            <!-- 推荐职位列表 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="space-y-6" id="recommendList">
+                    {% if recommend_jobs %}
+                        {% for job in recommend_jobs %}
+                        <div class="job-item p-4 border border-gray-100 rounded-lg hover:border-primary/30 transition-colors">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800 hover:text-primary transition-colors">
+                                        <a href="#">{{ job.name }}</a>
+                                    </h3>
+                                    <p class="text-danger font-medium mt-1">{{ job.salary }}</p>
+                                </div>
+                                <div class="mt-3 md:mt-0">
+                                    <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-sm rounded-full">
+                                        {{ job.key_word }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-neutral">
+                                <div><i class="fa fa-map-marker mr-1"></i> {{ job.place }}</div>
+                                <div><i class="fa fa-graduation-cap mr-1"></i> {{ job.education }}</div>
+                                <div><i class="fa fa-briefcase mr-1"></i> {{ job.experience }}</div>
+                            </div>
+
+                            <div class="mt-4 flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-gray-800">{{ job.company }}</p>
+                                    <p class="text-xs text-neutral mt-1">{{ job.scale }} | {{ job.label }}</p>
+                                </div>
+                                <button class="send-job-btn px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                                        data-job-id="{{ job.job_id }}">
+                                    立即投递
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-10">
+                            <i class="fa fa-folder-open-o text-4xl text-neutral/30 mb-3"></i>
+                            <p class="text-neutral">暂无推荐职位，请先完善求职意向或投递职位</p>
+                            <a href="{% url 'job_expect' %}" class="mt-4 inline-block px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors">
+                                完善求职意向
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 移动端侧边栏切换
+    const menuToggle = document.getElementById('menuToggle');
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            const sidebar = document.querySelector('aside');
+            sidebar.classList.toggle('hidden');
+        });
+    }
+
+    // 投递职位功能
+    document.querySelectorAll('.send-job-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const jobId = this.getAttribute('data-job-id');
+            const btnText = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i> 投递中...';
+
+            fetch('/send_job/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: `job_id=${jobId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 0) {
+                    this.innerHTML = '<i class="fa fa-check mr-1"></i> 已投递';
+                    this.classList.remove('bg-primary');
+                    this.classList.add('bg-success');
+                } else {
+                    this.innerHTML = btnText;
+                    alert(data.msg);
+                }
+                this.disabled = false;
+            })
+            .catch(err => {
+                console.error(err);
+                this.innerHTML = btnText;
+                this.disabled = false;
+            });
+        });
+    });
+
+    // 搜索功能
+    document.getElementById('recommendSearch').addEventListener('input', function(e) {
+        const keyword = e.target.value.toLowerCase();
+        document.querySelectorAll('.job-item').forEach(item => {
+            const jobName = item.querySelector('h3').textContent.toLowerCase();
+            const companyName = item.querySelector('p.font-medium').textContent.toLowerCase();
+            if (jobName.includes(keyword) || companyName.includes(keyword)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

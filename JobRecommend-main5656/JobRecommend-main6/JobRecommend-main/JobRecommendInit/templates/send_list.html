@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}我的投递 - 系统平台{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    <!-- 侧边栏 -->
+    <aside class="hidden md:flex flex-col w-64 bg-white shadow shadow-lg z-10">
+        <div class="p-5 border-b">
+            <h1 class="text-xl font-bold text-gradient">系统平台</h1>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+
+
+            <a href="{% url 'job_list' %}"
+               class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-search w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>数据搜索</span>
+            </a>
+
+            <a href="{% url 'bar_page' %}"
+               class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-bar-chart w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>可视化分析</span>
+            </a>
+
+            <a href="{% url 'get_recommend' %}"
+               class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-briefcase w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>职位推荐</span>
+            </a>
+
+            <a href="{% url 'pass_page' %}"
+               class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg group transition-colors">
+                <i class="fa fa-cog w-5 h-5 mr-3 text-gray-500 group-hover:text-primary transition-colors"></i>
+                <span>个人设置</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t">
+            <div class="flex items-center">
+                <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-800">{{ request.session.user_name }}</p>
+                    <p class="text-xs text-gray-500">普通用户</p>
+                </div>
+                <a href="{% url 'logout' %}" class="ml-auto text-gray-500 hover:text-danger transition-colors">
+                    <i class="fa fa-sign-out"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- 顶部导航栏 -->
+        <header class="bg-white shadow-sm z-10">
+            <div class="flex items-center justify-between p-4">
+                <button class="md:hidden text-gray-500 focus:outline-none" id="menuToggle">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+
+                <div class="relative max-w-md w-full mx-4">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" placeholder="搜索已投递职位..." id="sendListSearch"
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button class="relative text-gray-500 hover:text-primary transition-colors">
+                        <i class="fa fa-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-danger"></span>
+                    </button>
+                    <div class="hidden md:block h-8 w-px bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-8 h-8 rounded-full object-cover">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+            <div class="mb-6">
+                <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">我的投递记录</h1>
+                <p class="text-neutral">查看和管理您已投递的职位</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                {% if send_list %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">职位名称</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">公司</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">薪资</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">地点</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学历要求</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">投递时间</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for item in send_list %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ item.job.name }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">{{ item.job.company }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        {{ item.job.salary }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ item.job.place }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ item.job.education }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ item.send_time|date:"Y-m-d H:i" }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{% url 'job_detail' item.job.job_id %}" class="text-primary hover:text-primary/80 mr-3">查看详情</a>
+                                    <button class="text-danger hover:text-danger/80 cancel-send" data-send-id="{{ item.send_id }}">取消投递</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控件 -->
+                {% if is_paginated %}
+                <div class="flex items-center justify-between px-4 py-3 sm:px-6 mt-4">
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                显示第 <span class="font-medium">{{ page_obj.start_index }}</span> 到 <span class="font-medium">{{ page_obj.end_index }}</span> 条，共 <span class="font-medium">{{ paginator.count }}</span> 条记录
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                {% if page_obj.has_previous %}
+                                <a href="?page=1" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">首页</span>
+                                    <i class="fa fa-angle-double-left"></i>
+                                </a>
+                                <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">上一页</span>
+                                    <i class="fa fa-angle-left"></i>
+                                </a>
+                                {% endif %}
+
+                                <a href="?page={{ page_obj.number }}" aria-current="page" class="z-10 bg-primary text-white relative inline-flex items-center px-4 py-2 border border-primary text-sm font-medium">
+                                    {{ page_obj.number }}
+                                </a>
+
+                                {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">下一页</span>
+                                    <i class="fa fa-angle-right"></i>
+                                </a>
+                                <a href="?page={{ paginator.num_pages }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">末页</span>
+                                    <i class="fa fa-angle-double-right"></i>
+                                </a>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                        <i class="fa fa-envelope-o text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-1">暂无投递记录</h3>
+                    <p class="text-gray-500 mb-6">您还没有投递任何职位，快去浏览职位并投递吧</p>
+                    <a href="{% url 'job_list' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90">
+                        <i class="fa fa-search mr-2"></i> 浏览职位
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 取消投递功能
+    document.querySelectorAll('.cancel-send').forEach(button => {
+        button.addEventListener('click', function() {
+            const sendId = this.getAttribute('data-send-id');
+            const confirmDelete = confirm('确定要取消此次投递吗？');
+
+            if (confirmDelete) {
+                const btn = this;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 处理中';
+                btn.disabled = true;
+
+                fetch("{% url 'cancel_send' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: `send_id=${sendId}`
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code === 0) {
+                        showToast('已取消投递');
+                        // 移除当前行
+                        btn.closest('tr').remove();
+
+                        // 如果没有记录了，显示空状态
+                        if (document.querySelectorAll('tbody tr').length === 0) {
+                            document.querySelector('table').closest('div').innerHTML = `
+                                <div class="text-center py-12">
+                                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                                        <i class="fa fa-envelope-o text-2xl text-gray-400"></i>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-1">暂无投递记录</h3>
+                                    <p class="text-gray-500 mb-6">您还没有投递任何职位，快去浏览职位并投递吧</p>
+                                    <a href="{% url 'job_list' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90">
+                                        <i class="fa fa-search mr-2"></i> 浏览职位
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        showToast(data.msg, 'error');
+                        btn.innerHTML = '取消投递';
+                        btn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    showToast('操作失败，请重试', 'error');
+                    btn.innerHTML = '取消投递';
+                    btn.disabled = false;
+                    console.error(err);
+                });
+            }
+        });
+    });
+
+    // 搜索功能
+    document.getElementById('sendListSearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // 侧边栏切换（移动端）
+    document.getElementById('menuToggle').addEventListener('click', function() {
+        const sidebar = document.querySelector('aside');
+        sidebar.classList.toggle('hidden');
+        sidebar.classList.toggle('fixed');
+        sidebar.classList.toggle('inset-y-0');
+        sidebar.classList.toggle('left-0');
+        sidebar.classList.toggle('z-50');
+    });
+
+    // 提示框功能
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg ${
+            type === 'success' ? 'bg-green-50 text-green-800' :
+            type === 'error' ? 'bg-red-50 text-red-800' :
+            'bg-blue-50 text-blue-800'
+        } z-50`;
+        toast.innerHTML = `
+            <i class="fa fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>
+            ${message}
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}
